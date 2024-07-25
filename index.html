@@ -2,10 +2,379 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Climate Change Narrative Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        .scene {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .navigation {
+            margin: 20px;
+        }
+        #tooltip {
+            position: absolute;
+            background: lightgray;
+            padding: 5px;
+            border-radius: 3px;
+            pointer-events: none;
+            font-size: 12px;
+        }
+        .legend {
+            font-size: 12px;
+            text-anchor: start;
+        }
+        .legend rect {
+            stroke: #000;
+            stroke-width: 1px;
+        }
+    </style>
 </head>
 <body>
-    
+    <div id="scene1" class="scene active">
+        <h2>Scene 1: Counts of Vehicles by Model Year</h2>
+    </div>
+    <div id="scene2" class="scene">
+        <h2>Scene 2: Electric Range Analysis by Make</h2>
+    </div>
+    <div id="scene3" class="scene">
+        <h2>Scene 3: Overview of Electric Vehicle Trends</h2>
+    </div>
+    <div id="exploration" class="scene">
+        <h2>Exploration: Interactive Dashboard</h2>
+    </div>
+    <div class="navigation">
+        <button id="prevBtn" onclick="prevScene()">Previous</button>
+        <button id="nextBtn" onclick="nextScene()">Next</button>
+    </div>
+    <div id="tooltip" style="position: absolute; background: lightgray; padding: 5px; border-radius: 3px; display: none;"></div>
+    <script src=""></script>
+    <script>
+        // Load data and initialize visualization
+        d3.csv('Sampled_Small_EV_Data.csv').then(data => {
+            // Parse data
+            data.forEach(d => {
+                d.ModelYear = +d['Model Year'];
+                d.ElectricRange = +d['Electric Range'];
+                d.Make = d.Make;
+                d.Model = d.Model;
+                d.ElectricVehicleType = d['Electric Vehicle Type'];
+                d.CAFVEligibility = d['Clean Alternative Fuel Vehicle (CAFV) Eligibility'];
+            });
+            const margin = {top: 20, right: 150, bottom: 40, left: 150},
+                  width = 960 - margin.left - margin.right,
+                  height = 500 - margin.top - margin.bottom;
+
+            // Scene 1: Overview of Electric Vehicle Trends            
+            const scene1 = d3.select("#scene1");
+
+            const svg1 = scene1.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            const mapVehicleType = (type) => {
+                if (type.includes('Battery Electric Vehicle')) return 'EV';
+                if (type.includes('Plug-in Hybrid Electric Vehicle')) return 'Hybrid';
+                return 'Other';
+            };
+
+            const yearCounts = d3.nest()
+            .key(d => d.ModelYear)
+            .key(d => mapVehicleType(d.ElectricVehicleType))
+            .rollup(v => v.length)
+            .entries(data)
+            .map(d => {
+                let obj = { year: +d.key };
+                d.values.forEach(v => {
+                    obj[v.key] = v.value;
+                });
+                return obj;
+            });
+
+            yearCounts.sort((a, b) => d3.ascending(a.year, b.year));
+
+            const x1 = d3.scaleBand()
+                .domain(yearCounts.map(d => d.year))
+                .range([0, width])
+                .padding(0.1);
+
+            const y1 = d3.scaleLinear()
+                .domain([0, d3.max(yearCounts, d => d.EV + d.Hybrid)]).nice()
+                .range([height, 0]);
+
+            const color = d3.scaleOrdinal()
+                .domain(['EV', 'Hybrid'])
+                .range(['steelblue', 'orange']);
+
+            const bars = svg1.selectAll(".bar-group")
+                .data(yearCounts)
+                .enter().append("g")
+                .attr("class", "bar-group")
+                .attr("transform", d => `translate(${x1(d.year)}, 0)`);
+
+            bars.selectAll(".bar")
+                .data(d => [
+                        { type: 'Electric Vehicle', count: d['EV'] || 0 },
+                        { type: 'Hybrid', count: d['Hybrid'] || 0 }
+                    ])
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("y", d => y1(d.count))
+                .attr("width", x1.bandwidth())
+                .attr("height", d => height - y1(d.count))
+                .attr("fill", d => color(d.type))
+                .on("mouseover", function(event, d) {
+                    console.log(d);
+                    d3.select("#tooltip")
+                        .style("display", "block")
+                        .html(`Model Year: ${d.year}<br>Vehicle Count: ${d.count}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mousemove", function(event) {
+                    d3.select("#tooltip")
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("display", "none");
+                });
+
+            svg1.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x1).tickFormat(d3.format("d")));
+
+            svg1.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y1));
+
+            svg1.append("text")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom)
+                .attr("text-anchor", "middle")
+                .text("Model Year");
+
+            svg1.append("text")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .text("Count of Vehicles");
+
+            // Scene 1 legend
+            const legend = svg1.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${width}, 0)`);
+
+            const legendItems = [
+                { label: 'Electric Vehicle', color: 'steelblue' },
+                { label: 'Hybrid', color: 'orange' }
+            ];
+
+            legendItems.forEach((item, i) => {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * 20)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", item.color);
+
+                legend.append("text")
+                    .attr("x", 30)
+                    .attr("y", i * 20 + 14)
+                    .text(item.label);
+            });
+
+            // Scene 2: Electric Range Analysis by Make
+            const scene2 = d3.select("#scene2");
+
+            const svg2 = scene2.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            const x2 = d3.scaleBand()
+                .domain(data.map(d => d.Make))
+                .range([0, width])
+                .padding(0.1);
+
+            const y2 = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
+                .range([height, 0]);
+
+            svg2.append("g")
+                .selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x2(d.Make))
+                .attr("y", d => y2(d.ElectricRange))
+                .attr("width", x2.bandwidth())
+                .attr("height", d => height - y2(d.ElectricRange))
+                .attr("fill", "steelblue");
+
+            svg2.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x2));
+
+            svg2.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y2));
+
+            svg2.append("text")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom)
+                .attr("text-anchor", "middle")
+                .text("Make");
+
+            svg2.append("text")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .text("Electric Range");
+
+            // Scene 3: Electric Range by Model Year
+            const scene3 = d3.select("#scene3");
+
+            const svg3 = scene3.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            const x3 = d3.scaleBand()
+                .domain(data.map(d => d.ModelYear))
+                .range([0, width])
+                .padding(0.1);
+
+            const y3 = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
+                .range([height, 0]);
+
+            svg3.append("g")
+                .selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x3(d.ModelYear))
+                .attr("y", d => y3(d.ElectricRange))
+                .attr("width", x3.bandwidth())
+                .attr("height", d => height - y3(d.ElectricRange))
+                .attr("fill", "steelblue");
+
+            svg3.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x3).tickFormat(d3.format("d")));
+
+            svg3.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y3));
+
+            svg3.append("text")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom)
+                .attr("text-anchor", "middle")
+                .text("Model Year");
+
+            svg3.append("text")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .text("Count of Vehicles");
+
+            // Scene 4: User Exploration
+            const exploration = d3.select("#exploration");
+
+            const svg4 = exploration.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            const x4 = d3.scaleBand()
+                .domain(data.map(d => d.Model))
+                .range([0, width])
+                .padding(0.1);
+
+            const y4 = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
+                .range([height, 0]);
+
+            svg4.append("g")
+                .selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x4(d.Model))
+                .attr("y", d => y4(d.ElectricRange))
+                .attr("width", x4.bandwidth())
+                .attr("height", d => height - y4(d.ElectricRange))
+                .attr("fill", "steelblue");
+
+            svg4.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x4));
+
+            svg4.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y4));
+
+            svg4.append("text")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom)
+                .attr("text-anchor", "middle")
+                .text("Model");
+
+            svg4.append("text")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .text("Electric Range");
+        });
+    </script>
+    <script>
+        let currentScene = 0;
+        const scenes = document.querySelectorAll('.scene');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+
+        function showScene(index) {
+            scenes.forEach((scene, i) => {
+                scene.classList.toggle('active', i === index);
+            });
+            prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = index === scenes.length - 1 ? 'none' : 'inline-block';
+        }
+
+        function nextScene() {
+            if (currentScene < scenes.length - 1) {
+                currentScene++;
+                showScene(currentScene);
+            }
+        }
+
+        function prevScene() {
+            if (currentScene > 0) {
+                currentScene--;
+                showScene(currentScene);
+            }
+        }
+
+        // Initialize
+        showScene(currentScene);
+    </script>
 </body>
 </html>
