@@ -44,10 +44,10 @@
         <h2>Scene 1: Counts of Vehicles by Model Year</h2>
     </div>
     <div id="scene2" class="scene">
-        <h2>Scene 2: Electric Range Analysis by Make</h2>
+        <h2>Scene 2: Counts of Vehicles by Make</h2>
     </div>
     <div id="scene3" class="scene">
-        <h2>Scene 3: Overview of Electric Vehicle Trends</h2>
+        <h2>Scene 3: Electric Range Analysis of Electric and Hybrid Vehicles</h2>
     </div>
     <div id="exploration" class="scene">
         <h2>Exploration: Interactive Dashboard</h2>
@@ -71,10 +71,24 @@
             </select>
 
             <label for="year-range">Model Year Range:</label>
-            <input type="range" id="year-range" min="2000" max="2024" step="1" multiple>
+            <input type="range" id="left-year-range" min="2000" max="2024" step="1" multiple>
+            <input type="range" id="right-year-range" min="2000" max="2024" step="1" multiple>
+            <div class="slider">
+                <div class="track"></div>
+                <div class="range"></div>
+                <div class="thumb left"></div>
+                <div class="thumb right"></div>
+            </div>
 
             <label for="range-slider">Electric Range:</label>
-            <input type="range" id="range-slider" min="0" max="400" step="1" multiple>
+            <input type="range" id="left-range-slider" min="0" max="400" step="1" multiple>
+            <input type="range" id="right-range-slider" min="0" max="400" step="1" multiple>
+            <div class="slider">
+                <div class="track"></div>
+                <div class="range"></div>
+                <div class="thumb left"></div>
+                <div class="thumb right"></div>
+            </div>
 
             <label for="make-dropdown">Make:</label>
             <select id="make-dropdown" multiple>
@@ -92,7 +106,7 @@
                 <!-- Options will be populated dynamically -->
             </select>
         </div>
-        <svg id="exploration-chart" width="960" height="500"></svg>
+        <svg id="exploration-chart"></svg>
     </div>
     <div class="navigation">
         <button id="prevBtn" onclick="prevScene()">Previous</button>
@@ -152,7 +166,7 @@
             });
 
             const stack = d3.stack()
-                .keys(['EV', 'Hybrid']);
+                .keys(['Hybrid', 'EV']);
 
             const series = stack(completeYearCounts);
 
@@ -296,7 +310,7 @@
             });
 
             const stack2 = d3.stack()
-                .keys(makeCounts2.concat('Other'));
+                .keys(makeCounts2.concat('Other').reverse());
 
             const series2 = stack2(completeYearCounts2);
 
@@ -596,7 +610,12 @@
 
             // Scene 4: User Exploration
             const exploration = d3.select("#exploration");
-            const svg4 = d3.select("#exploration-chart");
+            const svg4 = d3.select("#exploration-chart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
             const g = svg4.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
             const xScale = d3.scaleBand().rangeRound([0, width]).padding(0.1);
@@ -612,16 +631,22 @@
             function updateChart() {
                 const xValue = document.getElementById('x-axis').value;
                 const yValue = document.getElementById('y-axis').value;
+                
+                console.log(xValue, yValue);
+                svg4.select(".s4-x-label").text(xValue); //.call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+                svg4.select(".s4-y-label").text(yValue); //.call(d3.axisLeft(yScale));
 
                 const filteredData = data.filter(d => {
-                    const yearRange = document.getElementById('year-range').value.split(',');
-                    const rangeSlider = document.getElementById('range-slider').value.split(',');
+                    const minYear = document.getElementById('left-year-range').value;
+                    const maxYear = document.getElementById('right-year-range').value;
+                    const minRange = document.getElementById('left-range-slider').value;
+                    const maxRange = document.getElementById('right-range-slider').value;
                     const selectedMakes = Array.from(document.getElementById('make-dropdown').selectedOptions).map(option => option.value);
                     const selectedTypes = Array.from(document.getElementById('type-dropdown').selectedOptions).map(option => option.value);
                     const selectedModels = Array.from(document.getElementById('model-dropdown').selectedOptions).map(option => option.value);
 
-                    return d.ModelYear >= +yearRange[0] && d.ModelYear <= +yearRange[1]
-                        && d.ElectricRange >= +rangeSlider[0] && d.ElectricRange <= +rangeSlider[1]
+                    return d.ModelYear >= minYear && d.ModelYear <= maxYear
+                        && d.ElectricRange >= minRange && d.ElectricRange <= maxRange
                         && (selectedMakes.length === 0 || selectedMakes.includes(d.Make))
                         && (selectedTypes.length === 0 || selectedTypes.includes(d.ElectricVehicleType))
                         && (selectedModels.length === 0 || selectedModels.includes(d.Model));
@@ -650,7 +675,7 @@
                     .attr("width", xScale.bandwidth())
                     .attr("height", d => height - yScale(d[yValue]));
 
-                bars.exit().remove();
+                bars.exit();
             }
 
             // Populate dropdowns with unique values
@@ -664,11 +689,26 @@
                 d3.select("#model-dropdown").append("option").attr("value", model).text(model);
             });
 
+            svg4.append("text")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom)
+                .attr("text-anchor", "middle")
+                .attr("class", "s4-x-label");
+
+            svg4.append("text")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("class", "s4-y-label");
+
             // Add event listeners to update chart on change
             document.getElementById('x-axis').addEventListener('change', updateChart);
             document.getElementById('y-axis').addEventListener('change', updateChart);
-            document.getElementById('year-range').addEventListener('change', updateChart);
-            document.getElementById('range-slider').addEventListener('change', updateChart);
+            document.getElementById('left-year-range').addEventListener('change', updateChart);
+            document.getElementById('right-year-range').addEventListener('change', updateChart);
+            document.getElementById('left-range-slider').addEventListener('change', updateChart);
+            document.getElementById('right-range-slider').addEventListener('change', updateChart);
             document.getElementById('make-dropdown').addEventListener('change', updateChart);
             document.getElementById('type-dropdown').addEventListener('change', updateChart);
             document.getElementById('model-dropdown').addEventListener('change', updateChart);
