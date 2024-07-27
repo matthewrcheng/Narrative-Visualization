@@ -513,33 +513,64 @@
 
             const averageRanges = d3.nest()
                 .key(d => d.ModelYear)
+                .key(d => mapVehicleType(d.ElectricVehicleType))
                 .rollup(v => d3.mean(v, d => d.ElectricRange))
                 .entries(filteredData)
-                .map(d => ({ year: +d.key, averageRange: d.value }));
+                .map(d => {
+                    let obj = { year: +d.key };
+                    d.values.forEach(v => {
+                        obj[v.key] = v.value;
+                    });
+                    return obj;
+            });
 
-            averageRanges.sort((a, b) => d3.ascending(a.year, b.year));
+            const allYears3 = d3.range(d3.min(filteredData, d => d.ModelYear), d3.max(filteredData, d => d.ModelYear) + 1);
 
-            console.log(averageRanges);
+            const completeYearCounts3 = allYears3.map(year => {
+                const yearData = averageRanges.find(d => d.year === year);
+                return yearData ? yearData : { year, EV: 0, Hybrid: 0 };
+            });
+
+            // averageRanges.sort((a, b) => d3.ascending(a.year, b.year));
+
+            // console.log(averageRanges);
 
             const x3 = d3.scaleBand()
-                .domain(averageRanges.map(d => d.year))
+                .domain(completeYearCounts3.map(d => d.year))
                 .range([0, width])
                 .padding(0.1);
 
+            const xSubgroup = d3.scaleBand()
+                .domain(["EV", "Hybrid"])
+                .range([0, x3.bandwidth()])
+                .padding(0.05);
+
             const y3 = d3.scaleLinear()
-                .domain([0, d3.max(averageRanges, d => d.averageRange)]).nice()
+                .domain([0, d3.max(completeYearCounts3, d => Math.max(d.EV, d.Hybrid))]).nice()
                 .range([height, 0]);
 
-            svg3.append("g")
-                .selectAll(".bar")
-                .data(averageRanges)
+            const color3 = d3.scaleOrdinal()
+                .domain(["EV", "Hybrid"])
+                .range(["steelblue", "orange"]);
+
+            const bars3 = svg3.selectAll(".bar-group")
+                .data(completeYearCounts3)
+                .enter().append("g")
+                .attr("class", "bar-group")
+                .attr("transform", d => "translate(" + x3(d.year) + ",0)");
+
+            bars3.selectAll(".bar")
+                .data(d => [
+                    { type: "EV", averageRange: d.EV || 0 },
+                    { type: "Hybrid", averageRange: d.Hybrid || 0 }
+                ])
                 .enter().append("rect")
                 .attr("class", "bar")
-                .attr("x", d => x3(d.year))
+                .attr("x", d => xSubgroup(d.type))
                 .attr("y", d => y3(d.averageRange))
-                .attr("width", x3.bandwidth())
+                .attr("width", xSubgroup.bandwidth())
                 .attr("height", d => height - y3(d.averageRange))
-                .attr("fill", "steelblue");
+                .attr("fill", d => color3(d.type));
 
             svg3.append("g")
                 .attr("class", "x-axis")
