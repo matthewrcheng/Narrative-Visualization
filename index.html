@@ -438,14 +438,12 @@
                 }
             ];
 
-            console.log(y2);
-
             const makeAnnotations2 = d3.annotation()
                 .type(d3.annotationLabel)
                 .annotations(annotations2)
                 .accessors({
                     x: d => x2(d.year) + x2.bandwidth() / 2,
-                    y: d => y2(d.year) * 2
+                    y: d => y2(series2[series2.length - 1][d.year-1997][1])
                 });
 
             svg2.append("g")
