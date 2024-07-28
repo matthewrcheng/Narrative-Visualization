@@ -52,59 +52,46 @@
     <div id="exploration" class="scene">
         <h2>Exploration: Interactive Dashboard</h2>
         <div class="filter-container">
-            <label for="x-axis">X-axis:</label>
-            <select id="x-axis">
-                <option value="ModelYear">Model Year</option>
-                <option value="ElectricRange">Electric Range</option>
-                <option value="Make">Make</option>
-                <option value="ElectricVehicleType">Electric Vehicle Type</option>
-                <option value="Model">Model</option>
-            </select>
+            <div class="div">
+                <label for="x-axis">X-axis:</label>
+                <select id="x-axis">
+                    <option value="ModelYear" selected="selected">Model Year</option>
+                    <option value="ElectricVehicleType">Electric Vehicle Type</option>
+                </select>
 
-            <label for="y-axis">Y-axis:</label>
-            <select id="y-axis">
-                <option value="ModelYear">Model Year</option>
-                <option value="ElectricRange">Electric Range</option>
-                <option value="Make">Make</option>
-                <option value="ElectricVehicleType">Electric Vehicle Type</option>
-                <option value="Model">Model</option>
-            </select>
+                <label for="y-axis">Y-axis:</label>
+                <select id="y-axis">
+                    <option value="ModelYear">Model Year</option>
+                    <option value="ElectricRange" selected="selected">Electric Range</option>
+                    <option value="CountOfVehicles">Count of Vehicles</option>
+                </select>
 
-            <label for="year-range">Model Year Range:</label>
-            <input type="range" id="left-year-range" min="2000" max="2024" step="1" multiple>
-            <input type="range" id="right-year-range" min="2000" max="2024" step="1" multiple>
-            <div class="slider">
-                <div class="track"></div>
-                <div class="range"></div>
-                <div class="thumb left"></div>
-                <div class="thumb right"></div>
+                <label for="year-range">Model Year Range:</label>
+                <input type="range" id="left-year-range" min="1997" max="2025" step="1" value="1997" multiple>
+                <input type="range" id="right-year-range" min="1997" max="2025" step="1" value="2025" multiple>
+
+                <label for="range-slider">Electric Range:</label>
+                <input type="range" id="left-range-slider" min="0" max="400" step="1" value="0" multiple>
+                <input type="range" id="right-range-slider" min="0" max="400" step="1" value="400" multiple>
+            </div>    
+            <div class="div">
+                <label for="make-dropdown">Make:</label>
+                <select id="make-dropdown" multiple>
+                    <!-- Options will be populated dynamically -->
+                </select>
+
+                <label for="type-dropdown">Electric Vehicle Type:</label>
+                <select id="type-dropdown" multiple>
+                    <!-- Options will be populated dynamically -->
+                </select>
+
+                <label for="model-dropdown">Model:</label>
+                <select id="model-dropdown" multiple>
+                    <!-- Options will be populated dynamically -->
+                </select>
+
+                <button id="reset-button">Reset Filters</button>
             </div>
-
-            <label for="range-slider">Electric Range:</label>
-            <input type="range" id="left-range-slider" min="0" max="400" step="1" multiple>
-            <input type="range" id="right-range-slider" min="0" max="400" step="1" multiple>
-            <div class="slider">
-                <div class="track"></div>
-                <div class="range"></div>
-                <div class="thumb left"></div>
-                <div class="thumb right"></div>
-            </div>
-
-            <label for="make-dropdown">Make:</label>
-            <select id="make-dropdown" multiple>
-                <!-- Options will be populated dynamically -->
-            </select>
-
-            <label for="type-dropdown">Electric Vehicle Type:</label>
-            <select id="type-dropdown" multiple>
-                <option value="BEV">BEV</option>
-                <option value="PHEV">PHEV</option>
-            </select>
-
-            <label for="model-dropdown">Model:</label>
-            <select id="model-dropdown" multiple>
-                <!-- Options will be populated dynamically -->
-            </select>
         </div>
         <svg id="exploration-chart"></svg>
     </div>
@@ -201,21 +188,22 @@
                 .attr("width", x1.bandwidth())
                 .attr("height", d => y1(d[0]) - y1(d[1]))
                 // .attr("fill", d => color(d.type))
-                .on("mouseover", function(event, d) {
-                    d3.select("#tooltip")
-                        .style("display", "block")
-                        .html(`Model Year: ${d.year}<br>Vehicle Count: ${d.count}`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mousemove", function(event) {
-                    d3.select("#tooltip")
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select("#tooltip").style("display", "none");
-                });
+                // .on("mouseover", function(event, d) {
+                //     d3.select("#tooltip")
+                //         .style("display", "block")
+                //         .html(`Model Year: ${d.year}<br>Vehicle Count: ${d.count}`)
+                //         .style("left", (event.pageX + 5) + "px")
+                //         .style("top", (event.pageY - 28) + "px");
+                // })
+                // .on("mousemove", function(event) {
+                //     d3.select("#tooltip")
+                //         .style("left", (event.pageX + 5) + "px")
+                //         .style("top", (event.pageY - 28) + "px");
+                // })
+                // .on("mouseout", function() {
+                //     d3.select("#tooltip").style("display", "none");
+                // })
+                ;
 
             svg1.append("g")
                 .attr("class", "x-axis")
@@ -342,21 +330,22 @@
                 .attr("y", d => y2(d[1]))
                 .attr("width", x2.bandwidth())
                 .attr("height", d => y2(d[0]) - y2(d[1]))
-                .on("mouseover", function(event, d) {
-                    d3.select("#tooltip")
-                        .style("display", "block")
-                        .html(`Model Year: ${d.year}<br>Make: ${d.make}<br>Vehicle Count: ${d.count}`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mousemove", function(event) {
-                    d3.select("#tooltip")
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select("#tooltip").style("display", "none");
-                });
+                // .on("mouseover", function(event, d) {
+                //     d3.select("#tooltip")
+                //         .style("display", "block")
+                //         .html(`Model Year: ${d.year}<br>Make: ${d.make}<br>Vehicle Count: ${d.count}`)
+                //         .style("left", (event.pageX + 5) + "px")
+                //         .style("top", (event.pageY - 28) + "px");
+                // })
+                // .on("mousemove", function(event) {
+                //     d3.select("#tooltip")
+                //         .style("left", (event.pageX + 5) + "px")
+                //         .style("top", (event.pageY - 28) + "px");
+                // })
+                // .on("mouseout", function() {
+                //     d3.select("#tooltip").style("display", "none");
+                // })
+                ;
 
             svg2.append("g")
                 .attr("class", "x-axis")
@@ -632,7 +621,6 @@
                 const xValue = document.getElementById('x-axis').value;
                 const yValue = document.getElementById('y-axis').value;
                 
-                console.log(xValue, yValue);
                 svg4.select(".s4-x-label").text(xValue); //.call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
                 svg4.select(".s4-y-label").text(yValue); //.call(d3.axisLeft(yScale));
 
@@ -645,6 +633,13 @@
                     const selectedTypes = Array.from(document.getElementById('type-dropdown').selectedOptions).map(option => option.value);
                     const selectedModels = Array.from(document.getElementById('model-dropdown').selectedOptions).map(option => option.value);
 
+                    d3.select("#left-year-range").attr("max", maxYear);
+                    d3.select("#right-year-range").attr("min", minYear);
+
+                    d3.select("#left-range-slider").attr("max", maxRange);
+                    d3.select("#right-range-slider").attr("min", minRange);
+
+                    console.log("minYear: " + minYear + ", maxYear: " + maxYear + ", minRange: " + minRange + ", maxRange: " + maxRange + ", selectedMakes: " + selectedMakes + ", selectedTypes: " + selectedTypes + ", selectedModels: " + selectedModels);
                     return d.ModelYear >= minYear && d.ModelYear <= maxYear
                         && d.ElectricRange >= minRange && d.ElectricRange <= maxRange
                         && (selectedMakes.length === 0 || selectedMakes.includes(d.Make))
@@ -652,42 +647,96 @@
                         && (selectedModels.length === 0 || selectedModels.includes(d.Model));
                 });
 
-                xScale.domain(filteredData.map(d => d[xValue]));
-                yScale.domain([0, d3.max(filteredData, d => d[yValue])]).nice();
+                let displayData;
+
+                if (yValue === "CountOfVehicles") {
+                    displayData = d3.nest()
+                                    .key(d => d[xValue])
+                                    .rollup(v => v.length)
+                                    .entries(filteredData)
+                                    .map(d => { return { [xValue]: d.key, count: d.value } });
+                    xScale.domain(displayData.map(d => d[xValue]));
+                    yScale.domain([0, d3.max(displayData, d => d.count)]).nice();
+                } else {
+                    displayData = filteredData;
+                    xScale.domain(displayData.map(d => d[xValue]));
+                    yScale.domain([0, d3.max(displayData, d => d[yValue])]).nice();
+                }
 
                 xAxis.call(d3.axisBottom(xScale));
                 yAxis.call(d3.axisLeft(yScale));
 
-                const bars = g.selectAll(".bar")
-                    .data(filteredData, d => d[xValue]);
+                console.log(displayData);
 
+                const bars = g.selectAll(".bar")
+                    .data(displayData, d => d[xValue]);
+
+                console.log(1);
+                
                 bars.enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => xScale(d[xValue]))
-                    .attr("y", d => yScale(d[yValue]))
+                    .attr("y", d => yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("width", xScale.bandwidth())
-                    .attr("height", d => height - yScale(d[yValue]))
+                    .attr("height", d => height - yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("fill", "steelblue");
+
+                console.log(2);
 
                 bars.transition().duration(750)
                     .attr("x", d => xScale(d[xValue]))
-                    .attr("y", d => yScale(d[yValue]))
+                    .attr("y", d => yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("width", xScale.bandwidth())
-                    .attr("height", d => height - yScale(d[yValue]));
+                    .attr("height", d => height - yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]));
 
-                bars.exit();
+                console.log(3);    
+
+                bars.exit().remove();
             }
 
+            function updateModelDropdown() {
+                const selectedMakes = Array.from(document.getElementById('make-dropdown').selectedOptions).map(option => option.value);
+                const modelDropdown = d3.select("#model-dropdown");
+                modelDropdown.html("");
+
+                const filteredModels = data.filter(d => selectedMakes.includes(d.Make))
+                    .map(d => d.Model);
+                const uniqueModels = Array.from(new Set(filteredModels));
+
+                uniqueModels.forEach(model => {
+                    modelDropdown.append("option").attr("value", model).text(model);
+                });
+
+                updateChart();
+            }
+
+            function resetFilters() {
+                document.getElementById('x-axis').value = 'ModelYear';
+                document.getElementById('y-axis').value = 'ElectricRange';
+                document.getElementById('left-year-range').value = 1997;
+                document.getElementById('right-year-range').value = 2025;
+                document.getElementById('left-range-slider').value = 0;
+                document.getElementById('right-range-slider').value = 400;
+                document.getElementById('make-dropdown').selectedIndex = -1;
+                document.getElementById('type-dropdown').selectedIndex = -1;
+                document.getElementById('model-dropdown').selectedIndex = -1;
+
+                updateModelDropdown();
+                updateChart();
+            }
+            
             // Populate dropdowns with unique values
             const makeOptions = Array.from(new Set(data.map(d => d.Make)));
             makeOptions.forEach(make => {
                 d3.select("#make-dropdown").append("option").attr("value", make).text(make);
             });
 
-            const modelOptions = Array.from(new Set(data.map(d => d.Model)));
-            modelOptions.forEach(model => {
-                d3.select("#model-dropdown").append("option").attr("value", model).text(model);
+            const typeOptions = Array.from(new Set(data.map(d => d.ElectricVehicleType)));
+            typeOptions.forEach(type => {
+                d3.select("#type-dropdown").append("option").attr("value", type).text(type);
             });
+
+            updateModelDropdown();
 
             svg4.append("text")
                 .attr("x", width / 2)
@@ -710,10 +759,13 @@
             document.getElementById('left-range-slider').addEventListener('change', updateChart);
             document.getElementById('right-range-slider').addEventListener('change', updateChart);
             document.getElementById('make-dropdown').addEventListener('change', updateChart);
+            document.getElementById('make-dropdown').addEventListener('change', updateModelDropdown);
             document.getElementById('type-dropdown').addEventListener('change', updateChart);
             document.getElementById('model-dropdown').addEventListener('change', updateChart);
+            document.getElementById('reset-button').addEventListener('click', resetFilters);
 
             // Initial chart update
+            resetFilters();
             updateChart();
             // const svg4 = exploration.append("svg")
             //     .attr("width", width + margin.left + margin.right)
