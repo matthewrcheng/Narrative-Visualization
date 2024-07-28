@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Electric Vehicle Narrative Visualization</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
     <style>
         .scene {
             display: none;
@@ -100,7 +101,6 @@
         <button id="nextBtn" onclick="nextScene()">Next</button>
     </div>
     <div id="tooltip" style="position: absolute; background: lightgray; padding: 5px; border-radius: 3px; display: none;"></div>
-    <script src=""></script>
     <script>
         // Load data and initialize visualization
         d3.csv('Sampled_Small_EV_Data.csv').then(data => {
@@ -157,8 +157,6 @@
 
             const series = stack(completeYearCounts);
 
-            console.log(completeYearCounts);
-
             const x1 = d3.scaleBand()
                 .domain(completeYearCounts.map(d => d.year))
                 .range([0, width])
@@ -177,7 +175,6 @@
                 .enter().append("g")
                 .attr("class", "bar-group")
                 .attr("fill", d => color(d.key))
-                //.attr("transform", d => `translate(${x1(d.year)}, 0)`);
 
             bars.selectAll(".bar")
                 .data(d => d)
@@ -186,24 +183,7 @@
                 .attr("x", d => x1(d.data.year))
                 .attr("y", d => y1(d[1]))
                 .attr("width", x1.bandwidth())
-                .attr("height", d => y1(d[0]) - y1(d[1]))
-                // .attr("fill", d => color(d.type))
-                // .on("mouseover", function(event, d) {
-                //     d3.select("#tooltip")
-                //         .style("display", "block")
-                //         .html(`Model Year: ${d.year}<br>Vehicle Count: ${d.count}`)
-                //         .style("left", (event.pageX + 5) + "px")
-                //         .style("top", (event.pageY - 28) + "px");
-                // })
-                // .on("mousemove", function(event) {
-                //     d3.select("#tooltip")
-                //         .style("left", (event.pageX + 5) + "px")
-                //         .style("top", (event.pageY - 28) + "px");
-                // })
-                // .on("mouseout", function() {
-                //     d3.select("#tooltip").style("display", "none");
-                // })
-                ;
+                .attr("height", d => y1(d[0]) - y1(d[1]));
 
             svg1.append("g")
                 .attr("class", "x-axis")
@@ -250,6 +230,58 @@
                     .attr("y", i * 20 + 14)
                     .text(item.label);
             });
+
+            // Annotations for Scene 1
+            const annotations1 = [
+                {
+                    note: { label: "Energy Policy Act of 2005 extends and increases incentives for EV's", title: "2005" },
+                    data: { year: 2005 },
+                    dy: -50,
+                    dx: -150
+                },
+                {
+                    note: { label: "American Recovery and Reinvestment Act of 2009, that expands tax credit, comes into effect", title: "2010" },
+                    data: { year: 2010 },
+                    dy: -50,
+                    dx: -100
+                },
+                {
+                    note: { label: "FAST Act authorizes funding for EV charging infrastructure", title: "2015" },
+                    data: { year: 2015 },
+                    dy: -100,
+                    dx: -100
+                },
+                {
+                    note: { label: "Federal tax credit extended for homes and businesses", title: "2020" },
+                    data: { year: 2020 },
+                    dy: -200,
+                    dx: -150
+                },
+                {
+                    note: { label: " Infrastructure Investment and Jobs Act provides more funding for EV infrastructure", title: "2021" },
+                    data: { year: 2021 },
+                    dy: -300,
+                    dx: -50
+                },
+                {
+                    note: { label: "Inflation Reduction Act of 2022, which introduces changes to EV tax credit system and extends eligibility of tax credits, comes into effect", title: "2023" },
+                    data: { year: 2023 },
+                    dy: -50,
+                    dx: 150
+                }
+            ];
+
+            const makeAnnotations1 = d3.annotation()
+                .type(d3.annotationLabel)
+                .annotations(annotations1)
+                .accessors({
+                    x: d => x1(d.year) + x1.bandwidth() / 2,
+                    y: d => y1(d3.sum([d.Hybrid, d.EV]))
+                });
+
+            svg1.append("g")
+                .attr("class", "annotation-group")
+                .call(makeAnnotations1);
 
             // Scene 2: Vehicle Counts by Model Year and Make
             const scene2 = d3.select("#scene2");
@@ -302,8 +334,6 @@
 
             const series2 = stack2(completeYearCounts2);
 
-            console.log(completeYearCounts2);
-
             const x2 = d3.scaleBand()
                 .domain(completeYearCounts2.map(d => d.year))
                 .range([0, width])
@@ -329,23 +359,7 @@
                 .attr("x", d => x2(d.data.year))
                 .attr("y", d => y2(d[1]))
                 .attr("width", x2.bandwidth())
-                .attr("height", d => y2(d[0]) - y2(d[1]))
-                // .on("mouseover", function(event, d) {
-                //     d3.select("#tooltip")
-                //         .style("display", "block")
-                //         .html(`Model Year: ${d.year}<br>Make: ${d.make}<br>Vehicle Count: ${d.count}`)
-                //         .style("left", (event.pageX + 5) + "px")
-                //         .style("top", (event.pageY - 28) + "px");
-                // })
-                // .on("mousemove", function(event) {
-                //     d3.select("#tooltip")
-                //         .style("left", (event.pageX + 5) + "px")
-                //         .style("top", (event.pageY - 28) + "px");
-                // })
-                // .on("mouseout", function() {
-                //     d3.select("#tooltip").style("display", "none");
-                // })
-                ;
+                .attr("height", d => y2(d[0]) - y2(d[1]));
 
             svg2.append("g")
                 .attr("class", "x-axis")
@@ -390,116 +404,53 @@
                     .text(item.label);
             });
 
-            // const makeCounts = d3.nest()
-            //     .key(d => d.Make)
-            //     .rollup(v => v.length)
-            //     .entries(data)
-            //     .map(d => ({ make: d.key, range: d.ElectricRange }));
+            // Annotations for Scene 2
+            const annotations2 = [
+                {
+                    note: { label: "Release of the Tesla Roadster", title: "2008" },
+                    data: { year: 2008 },
+                    dy: -50,
+                    dx: -150
+                },
+                {
+                    note: { label: "Release of the Nissan Leaf", title: "2011" },
+                    data: { year: 2011 },
+                    dy: -50,
+                    dx: -100
+                },
+                {
+                    note: { label: "Release of the Tesla Model S", title: "2012" },
+                    data: { year: 2012 },
+                    dy: -100,
+                    dx: -100
+                },
+                {
+                    note: { label: "Launch of Chevy Bolt", title: "2017" },
+                    data: { year: 2017 },
+                    dy: -200,
+                    dx: -150
+                },
+                {
+                    note: { label: "Tesla Model 3 orders deliver after 2017 release", title: "2018" },
+                    data: { year: 2018 },
+                    dy: 0,
+                    dx: -150
+                }
+            ];
 
-            // const x2 = d3.scaleLinear()
-            //     .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
-            //     .range([0, width]);
+            console.log(y2);
 
-            // const y2 = d3.scaleBand()
-            //     .domain(data.map(d => d.Make))
-            //     .range([height, 0])
-            //     .padding(0.1);
+            const makeAnnotations2 = d3.annotation()
+                .type(d3.annotationLabel)
+                .annotations(annotations2)
+                .accessors({
+                    x: d => x2(d.year) + x2.bandwidth() / 2,
+                    y: d => y2(d.year) * 2
+                });
 
-            // // const y2 = d3.scaleBand()
-            // //     .domain(data.map(d => d.Make))
-            // //     .range([0, height])
-            // //     .padding(0.1);
-
-            // // const x2 = d3.scaleLinear()
-            // //     .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
-            // //     .range([width, 0]);
-
-            // const svg2 = d3.select("#scene2").append("svg")
-            //     .attr("width", width + margin.left + margin.right)
-            //     .attr("height", height + margin.top + margin.bottom)
-            //     .append("g")
-            //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            // svg2.selectAll(".bar")
-            //     .data(data)
-            //     .enter().append("rect")
-            //     .attr("class", "bar")
-            //     .attr("y", d => y2(d.Make))
-            //     .attr("x", 0)
-            //     .attr("width", d => x2(d.ElectricRange))
-            //     .attr("height", y2.bandwidth())
-            //     .attr("fill", "steelblue");
-
-            // svg2.append("g")
-            //     .attr("class", "x-axis")
-            //     .attr("transform", "translate(0," + height + ")")
-            //     .call(d3.axisBottom(x2));
-
-            // svg2.append("g")
-            //     .attr("class", "y-axis")
-            //     .call(d3.axisLeft(y2));
-
-            // svg2.append("text")
-            //     .attr("x", width / 2)
-            //     .attr("y", height + margin.bottom)
-            //     .attr("text-anchor", "middle")
-            //     .text("Electric Range");
-
-            // svg2.append("text")
-            //     .attr("x", -height / 2)
-            //     .attr("y", -margin.left + 20)
-            //     .attr("text-anchor", "middle")
-            //     .attr("transform", "rotate(-90)")
-            //     .text("Make");
-            // const scene2 = d3.select("#scene2");
-
-            // const svg2 = scene2.append("svg")
-            //     .attr("width", width + margin.left + margin.right)
-            //     .attr("height", height + margin.top + margin.bottom)
-            //     .append("g")
-            //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            // const x2 = d3.scaleBand()
-            //     .domain(data.map(d => d.Make))
-            //     .range([0, width])
-            //     .padding(0.1);
-
-            // const y2 = d3.scaleLinear()
-            //     .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
-            //     .range([height, 0]);
-
-            // svg2.append("g")
-            //     .selectAll(".bar")
-            //     .data(data)
-            //     .enter().append("rect")
-            //     .attr("class", "bar")
-            //     .attr("x", d => x2(d.Make))
-            //     .attr("y", d => y2(d.ElectricRange))
-            //     .attr("width", x2.bandwidth())
-            //     .attr("height", d => height - y2(d.ElectricRange))
-            //     .attr("fill", "steelblue");
-
-            // svg2.append("g")
-            //     .attr("class", "x-axis")
-            //     .attr("transform", "translate(0," + height + ")")
-            //     .call(d3.axisBottom(x2));
-
-            // svg2.append("g")
-            //     .attr("class", "y-axis")
-            //     .call(d3.axisLeft(y2));
-
-            // svg2.append("text")
-            //     .attr("x", width / 2)
-            //     .attr("y", height + margin.bottom)
-            //     .attr("text-anchor", "middle")
-            //     .text("Make");
-
-            // svg2.append("text")
-            //     .attr("x", -height / 2)
-            //     .attr("y", -margin.left + 20)
-            //     .attr("text-anchor", "middle")
-            //     .attr("transform", "rotate(-90)")
-            //     .text("Electric Range");
+            svg2.append("g")
+                .attr("class", "annotation-group")
+                .call(makeAnnotations2);
 
             // Scene 3: Electric Range by Model Year
             const scene3 = d3.select("#scene3");
@@ -511,8 +462,6 @@
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             const filteredData = data.filter(d => d.ElectricRange > 0);
-
-            console.log(filteredData);  
 
             const averageRanges = d3.nest()
                 .key(d => d.ModelYear)
@@ -533,10 +482,6 @@
                 const yearData = averageRanges.find(d => d.year === year);
                 return yearData ? yearData : { year, EV: 0, Hybrid: 0 };
             });
-
-            // averageRanges.sort((a, b) => d3.ascending(a.year, b.year));
-
-            // console.log(averageRanges);
 
             const x3 = d3.scaleBand()
                 .domain(completeYearCounts3.map(d => d.year))
@@ -597,6 +542,52 @@
                 .attr("transform", "rotate(-90)")
                 .text("Average Electric Range");
 
+            // Scene 3 legend
+            const legend3 = svg3.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${width}, 0)`);
+
+            const legendItems3 = [
+                { label: 'Electric Vehicle', color: 'steelblue' },
+                { label: 'Hybrid', color: 'orange' }
+            ];
+
+            legendItems3.forEach((item, i) => {
+                legend3.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * 20)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", item.color);
+
+                legend3.append("text")
+                    .attr("x", 30)
+                    .attr("y", i * 20 + 14)
+                    .text(item.label);
+            });
+
+            // Annotations for Scene 3
+            const annotations3 = [
+                {
+                    note: { label: "Most EVs have a range between 100-200 miles", title: "Range 100-200" },
+                    data: { year: 2008 },
+                    dy: -450,
+                    dx: -150
+                }
+            ];
+
+            const makeAnnotations3 = d3.annotation()
+                .type(d3.annotationLabel)
+                .annotations(annotations3)
+                .accessors({
+                    x: d => x3(d.year) + x3.bandwidth() / 2,
+                    y: d => y3(d3.sum([d.EV, d.Hybrid]))
+                });
+
+            svg3.append("g")
+                .attr("class", "annotation-group")
+                .call(makeAnnotations3);
+
             // Scene 4: User Exploration
             const exploration = d3.select("#exploration");
             const svg4 = d3.select("#exploration-chart")
@@ -621,8 +612,8 @@
                 const xValue = document.getElementById('x-axis').value;
                 const yValue = document.getElementById('y-axis').value;
                 
-                svg4.select(".s4-x-label").text(xValue); //.call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
-                svg4.select(".s4-y-label").text(yValue); //.call(d3.axisLeft(yScale));
+                svg4.select(".s4-x-label").text(xValue);
+                svg4.select(".s4-y-label").text(yValue);
 
                 const filteredData = data.filter(d => {
                     const minYear = document.getElementById('left-year-range').value;
@@ -639,7 +630,6 @@
                     d3.select("#left-range-slider").attr("max", maxRange);
                     d3.select("#right-range-slider").attr("min", minRange);
 
-                    console.log("minYear: " + minYear + ", maxYear: " + maxYear + ", minRange: " + minRange + ", maxRange: " + maxRange + ", selectedMakes: " + selectedMakes + ", selectedTypes: " + selectedTypes + ", selectedModels: " + selectedModels);
                     return d.ModelYear >= minYear && d.ModelYear <= maxYear
                         && d.ElectricRange >= minRange && d.ElectricRange <= maxRange
                         && (selectedMakes.length === 0 || selectedMakes.includes(d.Make))
@@ -666,12 +656,8 @@
                 xAxis.call(d3.axisBottom(xScale));
                 yAxis.call(d3.axisLeft(yScale));
 
-                console.log(displayData);
-
                 const bars = g.selectAll(".bar")
                     .data(displayData, d => d[xValue]);
-
-                console.log(1);
                 
                 bars.enter().append("rect")
                     .attr("class", "bar")
@@ -681,15 +667,11 @@
                     .attr("height", d => height - yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("fill", "steelblue");
 
-                console.log(2);
-
                 bars.transition().duration(750)
                     .attr("x", d => xScale(d[xValue]))
                     .attr("y", d => yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("width", xScale.bandwidth())
                     .attr("height", d => height - yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]));
-
-                console.log(3);    
 
                 bars.exit().remove();
             }
@@ -767,53 +749,6 @@
             // Initial chart update
             resetFilters();
             updateChart();
-            // const svg4 = exploration.append("svg")
-            //     .attr("width", width + margin.left + margin.right)
-            //     .attr("height", height + margin.top + margin.bottom)
-            //     .append("g")
-            //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            // const x4 = d3.scaleBand()
-            //     .domain(data.map(d => d.Model))
-            //     .range([0, width])
-            //     .padding(0.1);
-
-            // const y4 = d3.scaleLinear()
-            //     .domain([0, d3.max(data, d => d.ElectricRange)]).nice()
-            //     .range([height, 0]);
-
-            // svg4.append("g")
-            //     .selectAll(".bar")
-            //     .data(data)
-            //     .enter().append("rect")
-            //     .attr("class", "bar")
-            //     .attr("x", d => x4(d.Model))
-            //     .attr("y", d => y4(d.ElectricRange))
-            //     .attr("width", x4.bandwidth())
-            //     .attr("height", d => height - y4(d.ElectricRange))
-            //     .attr("fill", "steelblue");
-
-            // svg4.append("g")
-            //     .attr("class", "x-axis")
-            //     .attr("transform", "translate(0," + height + ")")
-            //     .call(d3.axisBottom(x4));
-
-            // svg4.append("g")
-            //     .attr("class", "y-axis")
-            //     .call(d3.axisLeft(y4));
-
-            // svg4.append("text")
-            //     .attr("x", width / 2)
-            //     .attr("y", height + margin.bottom)
-            //     .attr("text-anchor", "middle")
-            //     .text("Model");
-
-            // svg4.append("text")
-            //     .attr("x", -height / 2)
-            //     .attr("y", -margin.left + 20)
-            //     .attr("text-anchor", "middle")
-            //     .attr("transform", "rotate(-90)")
-            //     .text("Electric Range");
         });
     </script>
     <script>
