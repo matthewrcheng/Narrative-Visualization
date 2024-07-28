@@ -97,8 +97,9 @@
         <svg id="exploration-chart"></svg>
     </div>
     <div class="navigation">
-        <button id="prevBtn" onclick="prevScene()">Previous</button>
-        <button id="nextBtn" onclick="nextScene()">Next</button>
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+        <button id="advance-annotations">Advance Annotations</button>
     </div>
     <div id="tooltip" style="position: absolute; background: lightgray; padding: 5px; border-radius: 3px; display: none;"></div>
     <script>
@@ -116,6 +117,12 @@
             const margin = {top: 20, right: 150, bottom: 40, left: 100},
                   width = 1280 - margin.left - margin.right,
                   height = 600 - margin.top - margin.bottom;
+
+            let currentScene = 0;
+            const scenes = document.querySelectorAll('.scene');
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+
 
             // Scene 1: Overview of Electric Vehicle Trends            
             const scene1 = d3.select("#scene1");
@@ -254,19 +261,19 @@
                 {
                     note: { label: "Federal tax credit extended for homes and businesses", title: "2020" },
                     data: { year: 2020 },
-                    dy: -200,
+                    dy: -100,
                     dx: -150
                 },
                 {
                     note: { label: " Infrastructure Investment and Jobs Act provides more funding for EV infrastructure", title: "2021" },
                     data: { year: 2021 },
-                    dy: -300,
+                    dy: -150,
                     dx: -50
                 },
                 {
                     note: { label: "Inflation Reduction Act of 2022, which introduces changes to EV tax credit system and extends eligibility of tax credits, comes into effect", title: "2023" },
                     data: { year: 2023 },
-                    dy: -50,
+                    dy: 30,
                     dx: 150
                 }
             ];
@@ -276,12 +283,31 @@
                 .annotations(annotations1)
                 .accessors({
                     x: d => x1(d.year) + x1.bandwidth() / 2,
-                    y: d => y1(d3.sum([d.Hybrid, d.EV]))
+                    y: d => y1(series[series.length - 1][d.year-1997][1])
                 });
 
             svg1.append("g")
-                .attr("class", "annotation-group")
+                .attr("class", "annotation-group scene1-annotations")
                 .call(makeAnnotations1);
+
+            d3.selectAll(".scene1-annotations g.annotation-connector, .scene1-annotations g.annotation-note")
+                .style("display", "none");
+
+            let annotationIndex1 = 0;
+
+            function advanceAnnotation1() {
+                const annotations = d3.selectAll(".scene1-annotations g.annotation-connector, .scene1-annotations g.annotation-note").nodes();
+                console.log(annotationIndex1);
+                if (annotationIndex1 < annotations.length) {
+                    d3.select(annotations[annotationIndex1]).style("display", null);
+                    // annotationIndex1++;
+                    d3.select(annotations[annotationIndex1 + 1]).style("display", null);
+                    annotationIndex1 += 2;
+                }
+            }
+
+            // Add event listener to the button
+            document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation1);
 
             // Scene 2: Vehicle Counts by Model Year and Make
             const scene2 = d3.select("#scene2");
@@ -410,30 +436,30 @@
                     note: { label: "Release of the Tesla Roadster", title: "2008" },
                     data: { year: 2008 },
                     dy: -50,
-                    dx: -150
+                    dx: -350
                 },
                 {
                     note: { label: "Release of the Nissan Leaf", title: "2011" },
                     data: { year: 2011 },
-                    dy: -50,
-                    dx: -100
+                    dy: -100,
+                    dx: -300
                 },
                 {
                     note: { label: "Release of the Tesla Model S", title: "2012" },
                     data: { year: 2012 },
-                    dy: -100,
-                    dx: -100
+                    dy: -200,
+                    dx: -250
                 },
                 {
                     note: { label: "Launch of Chevy Bolt", title: "2017" },
                     data: { year: 2017 },
                     dy: -200,
-                    dx: -150
+                    dx: -250
                 },
                 {
                     note: { label: "Tesla Model 3 orders deliver after 2017 release", title: "2018" },
                     data: { year: 2018 },
-                    dy: 0,
+                    dy: -100,
                     dx: -150
                 }
             ];
@@ -447,8 +473,25 @@
                 });
 
             svg2.append("g")
-                .attr("class", "annotation-group")
+                .attr("class", "annotation-group scene2-annotations")
                 .call(makeAnnotations2);
+
+            d3.selectAll(".scene2-annotations g.annotation-connector, .scene2-annotations g.annotation-note")
+                .style("display", "none");
+
+            let annotationIndex2 = 0;
+
+            function advanceAnnotation2() {
+                const annotations = d3.selectAll(".scene2-annotations g.annotation-connector, .scene2-annotations g.annotation-note").nodes();
+                if (annotationIndex2 < annotations.length) {
+                    d3.select(annotations[annotationIndex2]).style("display", null);
+                    d3.select(annotations[annotationIndex2 + 1]).style("display", null);
+                    annotationIndex2 += 2;
+                }
+            }
+
+            // Add event listener to the button
+            // document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation2);
 
             // Scene 3: Electric Range by Model Year
             const scene3 = d3.select("#scene3");
@@ -567,10 +610,28 @@
             // Annotations for Scene 3
             const annotations3 = [
                 {
-                    note: { label: "Most EVs have a range between 100-200 miles", title: "Range 100-200" },
+                    note: { label: "Commercial EVs gain initial popularity", title: "Range 100-200" },
+                    data: { year: 1997 },
+                    dy: -200,
+                    dx: 20
+                },
+                {
+                    note: { label: "First Teslas increase range limits", title: "Range 100-200" },
                     data: { year: 2008 },
-                    dy: -450,
-                    dx: -150
+                    dy: -50,
+                    dx: -250
+                },
+                {
+                    note: { label: "Affordable EVs gain in popularity", title: "Range 100-200" },
+                    data: { year: 2011 },
+                    dy: -250,
+                    dx: 20
+                },
+                {
+                    note: { label: "Tesla Model 3 bridges gap between Luxury and ", title: "Range 100-200" },
+                    data: { year: 2017 },
+                    dy: -100,
+                    dx: 130
                 }
             ];
 
@@ -578,13 +639,31 @@
                 .type(d3.annotationLabel)
                 .annotations(annotations3)
                 .accessors({
-                    x: d => x3(d.year) + x3.bandwidth() / 2,
-                    y: d => y3(d3.sum([d.EV, d.Hybrid]))
+                    x: d => x3(d.year) + x3.bandwidth() / 4,
+                    // y: d => y3(d3.sum([d.EV, d.Hybrid])) 
+                    y: d => y3(d3.max([completeYearCounts3[d.year-1997].EV, completeYearCounts3[d.year-1997].Hybrid]))
                 });
 
             svg3.append("g")
-                .attr("class", "annotation-group")
+                .attr("class", "annotation-group scene3-annotations")
                 .call(makeAnnotations3);
+
+            d3.selectAll(".scene3-annotations g.annotation-connector, .scene3-annotations g.annotation-note")
+                .style("display", "none");
+
+            let annotationIndex3 = 0;
+
+            function advanceAnnotation3() {
+                const annotations = d3.selectAll(".scene3-annotations g.annotation-connector, .scene3-annotations g.annotation-note").nodes();
+                if (annotationIndex3 < annotations.length) {
+                    d3.select(annotations[annotationIndex3]).style("display", null);
+                    d3.select(annotations[annotationIndex3 + 1]).style("display", null);
+                    annotationIndex3 += 2;
+                }
+            }
+
+            // Add event listener to the button
+            // document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation3);
 
             // Scene 4: User Exploration
             const exploration = d3.select("#exploration");
@@ -726,7 +805,7 @@
 
             svg4.append("text")
                 .attr("x", -height / 2)
-                .attr("y", -margin.left + 20)
+                .attr("y", -margin.left + 100)
                 .attr("text-anchor", "middle")
                 .attr("transform", "rotate(-90)")
                 .attr("class", "s4-y-label");
@@ -747,38 +826,65 @@
             // Initial chart update
             resetFilters();
             updateChart();
+            
+
+            function showScene(index) {
+                scenes.forEach((scene, i) => {
+                    scene.classList.toggle('active', i === index);
+                });
+                prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+                nextBtn.style.display = index === scenes.length - 1 ? 'none' : 'inline-block';
+            }
+
+            function nextScene() {
+                if (currentScene < scenes.length - 1) {
+                    currentScene++;
+                    showScene(currentScene);
+                    if (currentScene == 0) {
+                        document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation1);
+                    }
+                    else if (currentScene == 1) {
+                        document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation2);
+                        document.getElementById("advance-annotations").removeEventListener("click", advanceAnnotation1);
+                    }
+                    else if (currentScene == 2) {
+                        document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation3);
+                        document.getElementById("advance-annotations").removeEventListener("click", advanceAnnotation2);
+                    }
+                    else {
+                        document.getElementById("advance-annotations").style.display = "none";
+                    }
+                }
+            }
+
+            function prevScene() {
+                if (currentScene > 0) {
+                    currentScene--;
+                    showScene(currentScene);
+                }
+                if (currentScene == 0) {
+                    document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation1);
+                    document.getElementById("advance-annotations").removeEventListener("click", advanceAnnotation2);
+                }
+                else if (currentScene == 1) {
+                    document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation2);
+                    document.getElementById("advance-annotations").removeEventListener("click", advanceAnnotation3);
+                }
+                else if (currentScene == 2) {
+                    document.getElementById("advance-annotations").style.display = null;
+                    document.getElementById("advance-annotations").addEventListener("click", advanceAnnotation3);
+                }
+                else {
+                    document.getElementById("advance-annotations").style.display = "none";
+                }
+            }
+
+            document.getElementById("nextBtn").addEventListener("click", nextScene);
+            document.getElementById("prevBtn").addEventListener("click", prevScene);
+
+            // Initialize
+            showScene(currentScene);
         });
-    </script>
-    <script>
-        let currentScene = 0;
-        const scenes = document.querySelectorAll('.scene');
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-
-        function showScene(index) {
-            scenes.forEach((scene, i) => {
-                scene.classList.toggle('active', i === index);
-            });
-            prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
-            nextBtn.style.display = index === scenes.length - 1 ? 'none' : 'inline-block';
-        }
-
-        function nextScene() {
-            if (currentScene < scenes.length - 1) {
-                currentScene++;
-                showScene(currentScene);
-            }
-        }
-
-        function prevScene() {
-            if (currentScene > 0) {
-                currentScene--;
-                showScene(currentScene);
-            }
-        }
-
-        // Initialize
-        showScene(currentScene);
     </script>
 </body>
 </html>
