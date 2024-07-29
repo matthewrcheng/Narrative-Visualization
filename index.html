@@ -432,34 +432,34 @@
             // Annotations for Scene 2
             const annotations2 = [
                 {
-                    note: { label: "2008: Release of the Tesla Roadster, an electric sports car that started the electric revolution", title: "" },
+                    note: { label: "Release of the Tesla Roadster, an electric sports car that started the electric revolution", title: "2008" },
                     data: { year: 2008 },
                     dy: -60,
-                    dx: -350
-                },
-                {
-                    note: { label: "2011: Release of the Nissan Leaf, the first mass market electric and zero-emission vehicle", title: "2011" },
-                    data: { year: 2011 },
-                    dy: -100,
                     dx: -300
                 },
                 {
-                    note: { label: "2012: Release of the Tesla Model S, the top-selling electric car for its first five years", title: "2012" },
+                    note: { label: "Release of the Nissan Leaf, the first mass market electric and zero-emission vehicle", title: "2011" },
+                    data: { year: 2011 },
+                    dy: -100,
+                    dx: -250
+                },
+                {
+                    note: { label: "Release of the Tesla Model S, the top-selling electric car for its first five years", title: "2012" },
                     data: { year: 2012 },
                     dy: -200,
-                    dx: -250
+                    dx: -150
                 },
                 {
-                    note: { label: "2017: Launch of the Chevy Bolt, a popular EV known for its affordability", title: "2017" },
+                    note: { label: "Launch of the Chevy Bolt, a popular EV known for its affordability", title: "2017" },
                     data: { year: 2017 },
                     dy: -200,
-                    dx: -250
+                    dx: -150
                 },
                 {
-                    note: { label: "2018: Orders of Tesla Model 3, a more affordable and popular alternative to Model S, begin fulfillment after 2017 release", title: "2018" },
+                    note: { label: "Orders of Tesla Model 3, a more affordable and popular alternative to Model S, begin fulfillment after 2017 release", title: "2018" },
                     data: { year: 2018 },
-                    dy: -100,
-                    dx: -150
+                    dy: -150,
+                    dx: 50
                 }
             ];
 
@@ -606,31 +606,28 @@
             // Annotations for Scene 3
             const annotations3 = [
                 {
-                    note: { label: "1997: Commercial EVs start entering the market", title: "1997" },
+                    note: { label: "Commercial EVs start entering the market", title: "1997" },
                     data: { year: 1997 },
                     dy: -200,
-                    dx: 20,
-                    x: 11.503436426116835,
-                    y: 464.78571428571433
-                    // 400.85051546391753, 115.71428571428572 507.0360824742268, 393.9589285714286 719.4072164948454, 180.21185064935062
+                    dx: 100
                 },
                 {
-                    note: { label: "2008: First Teslas extend EV range limits", title: "2008" },
+                    note: { label: "First Teslas extend EV range limits", title: "2008" },
                     data: { year: 2008 },
                     dy: -50,
-                    dx: -250
+                    dx: -100
                 },
                 {
-                    note: { label: "2011: Affordable EVs gain in popularity", title: "2011" },
+                    note: { label: "Affordable EVs gain in popularity", title: "2011" },
                     data: { year: 2011 },
-                    dy: -250,
-                    dx: 20
+                    dy: -150,
+                    dx: 60
                 },
                 {
-                    note: { label: "2017: Tesla Model 3 bridges gap between luxury \nand affordability", title: "2017" },
+                    note: { label: "Tesla Model 3 bridges gap between luxury and affordability", title: "2017" },
                     data: { year: 2017 },
                     dy: -100,
-                    dx: 130
+                    dx: -20
                 }
             ];
 
@@ -871,6 +868,74 @@
             document.getElementById("prevBtn").addEventListener("click", prevScene);
 
             // Initialize
+            d3.selectAll(".scene2-annotations g.annotation-note-content")
+                .attr("transform", "translate(-60, -120)");
+
+            d3.selectAll(".scene2-annotations rect.annotation-note-bg")
+                .attr("width", 120)
+                .attr("height", 120);
+
+            d3.selectAll(".scene2-annotations text.annotation-note-label")
+                .attr("y", 18.7);
+
+            d3.selectAll(".scene3-annotations g.annotation-note-content")
+                .attr("transform", "translate(-60, -120)");
+
+            d3.selectAll(".scene3-annotations rect.annotation-note-bg")
+                .attr("width", 120)
+                .attr("height", 120);
+
+            d3.selectAll(".scene3-annotations text.annotation-note-label")
+                .attr("y", 18.7);
+
+            d3.selectAll('.scene2-annotations text.annotation-note-label tspan, .scene3-annotations text.annotation-note-label tspan')
+                .each(function() {
+                    let text = d3.select(this).text();
+
+                    function splitText(text, charLimit) {
+                        let words = text.split(' ');
+                        let result = [];
+                        let line = '';
+
+                        words.forEach(word => {
+                            if (line.length + word.length + 1 <= charLimit) {
+                                line += (line.length ? ' ' : '') + word;
+                            } else {
+                                result.push(line);
+                                line = word;
+                            }
+                        });
+                        
+                        if (line.length) {
+                            result.push(line);
+                        }
+
+                        return result;
+                    }
+
+                    let splitTextArray = splitText(text, 18);
+
+                    let newHeight = (splitTextArray.length) * 20 + 20;
+
+                    let parentTextElement = d3.select(this.parentNode);
+
+                    let a = d3.select(parentTextElement.node().parentNode)
+                        .attr('transform', 'translate(-60, -' + newHeight + ')')
+                        .select('rect.annotation-note-bg')
+                        .attr('height', newHeight);
+
+                    splitTextArray.forEach((text, i) => {
+                        parentTextElement
+                            .append('tspan')
+                            .attr('x', 0)
+                            .attr('dy', i == 0 ? '0.8em' : "1.2em")
+                            .text(text);
+                    });
+
+                    d3.select(this).remove();
+                });
+
+
             showScene(currentScene);
             resetFilters();
             updateChart();
