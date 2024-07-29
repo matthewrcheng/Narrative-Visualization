@@ -18,14 +18,6 @@
             font-size: large;
             text-align: center;
         }
-        #tooltip {
-            position: absolute;
-            background: lightgray;
-            padding: 5px;
-            border-radius: 3px;
-            pointer-events: none;
-            font-size: 12px;
-        }
         .legend {
             font-size: 12px;
             text-anchor: start;
@@ -36,6 +28,20 @@
         }
         .filter-container {
             margin: 10px 0;
+        }
+        .control-button {
+            position: absolute;
+            /* top: 0; */
+        }
+        #prevBtn {
+            left: 40%;
+        }
+        #nextBtn {
+            right: 40%;
+        }
+        #advance-annotations {
+            left: 50%;
+            transform: translateX(-40%);
         }
     </style>
 </head>
@@ -97,9 +103,9 @@
         </div>
     </div>
     <div class="navigation">
-        <button id="prevBtn">Previous</button>
-        <button id="nextBtn">Next</button>
-        <button id="advance-annotations">Advance Annotations</button>
+        <button id="prevBtn" class="control-button">Previous</button>
+        <button id="nextBtn" class="control-button">Next</button>
+        <button id="advance-annotations" class="control-button">Advance Annotations</button>
     </div>
     <div id="tooltip" style="position: absolute; background: lightgray; padding: 5px; border-radius: 3px; display: none;"></div>
     <script>
