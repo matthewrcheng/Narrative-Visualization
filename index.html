@@ -43,6 +43,15 @@
             left: 50%;
             transform: translateX(-40%);
         }
+        #tooltip {
+            position: absolute;
+            background: lightgray;
+            padding: 5px;
+            border-radius: 3px;
+            opacity: 0;
+            display: inline-block;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -63,14 +72,13 @@
             <div class="div">
                 <label for="x-axis">X-axis:</label>
                 <select id="x-axis">
-                    <option value="ModelYear" selected="selected">Model Year</option>
+                    <option value="ModelYear">Model Year</option>
                     <option value="ElectricVehicleType">Electric Vehicle Type</option>
                 </select>
 
                 <label for="y-axis">Y-axis:</label>
                 <select id="y-axis">
-                    <option value="ModelYear">Model Year</option>
-                    <option value="ElectricRange" selected="selected">Electric Range</option>
+                    <option value="ElectricRange">Electric Range</option>
                     <option value="CountOfVehicles">Count of Vehicles</option>
                 </select>
 
@@ -101,6 +109,7 @@
                 <button id="reset-button">Reset Filters</button>
             </div>
         </div>
+        <div name="tooltip"></div>
     </div>
     <div class="navigation">
         <button id="prevBtn" class="control-button">Previous</button>
@@ -303,7 +312,6 @@
 
             function advanceAnnotation1() {
                 const annotations = d3.selectAll(".scene1-annotations g.annotation-connector, .scene1-annotations g.annotation-note").nodes();
-                console.log(annotationIndex1);
                 if (annotationIndex1 < annotations.length) {
                     d3.select(annotations[annotationIndex1]).style("display", null);
                     d3.select(annotations[annotationIndex1 + 1]).style("display", null);
@@ -720,7 +728,7 @@
 
                 let displayData;
 
-                if (yValue === "CountOfVehicles") {
+                if (yValue === "CountOfVehicles") { 
                     displayData = d3.nest()
                                     .key(d => d[xValue])
                                     .rollup(v => v.length)
@@ -729,7 +737,12 @@
                     xScale.domain(displayData.map(d => d[xValue]));
                     yScale.domain([0, d3.max(displayData, d => d.count)]).nice();
                 } else {
-                    displayData = filteredData;
+                    displayData = d3.nest()
+                                    .key(d => d[xValue])
+                                    .rollup(v => d3.mean(v, d => d[yValue]))
+                                    .entries(filteredData)
+                                    .map(d => { return { [xValue]: d.key, [yValue]: d.value } });
+
                     xScale.domain(displayData.map(d => d[xValue]));
                     yScale.domain([0, d3.max(displayData, d => d[yValue])]).nice();
                 }
@@ -739,6 +752,8 @@
 
                 const bars = svg4.selectAll(".bar")
                     .data(displayData, d => d[xValue]);
+
+                let tooltip = d3.select("#tooltip");
                 
                 bars.enter().append("rect")
                     .attr("class", "bar")
@@ -746,7 +761,21 @@
                     .attr("y", d => yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
                     .attr("width", xScale.bandwidth())
                     .attr("height", d => height - yScale(yValue === "CountOfVehicles" ? d.count : d[yValue]))
-                    .attr("fill", "steelblue");
+                    .attr("fill", "steelblue")
+                    .on("mouseover", function (d, i) {
+                        const xValue = document.getElementById('x-axis').value;
+                        const yValue = document.getElementById('y-axis').value;
+                        tooltip.style("opacity", 1)
+                            .style("left", (d3.event.pageX + 10) + "px")
+                            .style("top", (d3.event.pageY - 10) + "px")
+                            .style("display", "inline-block")
+                            .html(xValue + ": " + d[xValue] + "<br>" + (yValue === "CountOfVehicles" ? "Count: " + d.count : yValue + ": " + d[yValue].toFixed(2)));
+                    })
+                    .on("mousemove", function(event) {
+                        tooltip.style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px");
+                    })
+                    .on("mouseout", function () { tooltip.style("opacity", 0); });
 
                 bars.transition().duration(750)
                     .attr("x", d => xScale(d[xValue]))
